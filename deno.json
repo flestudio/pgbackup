@@ -1,0 +1,6 @@
+{
+	"imports": {
+		"@biomejs/biome": "npm:@biomejs/biome@^2.0.5",
+		"@kazupon/gunshi": "jsr:@kazupon/gunshi@^0.26.3"
+	}
+}
