@@ -2,6 +2,9 @@
 	"imports": {
 		"@biomejs/biome": "npm:@biomejs/biome@^2.0.5",
 		"@david/dax": "jsr:@david/dax@^0.43.2",
-		"@kazupon/gunshi": "jsr:@kazupon/gunshi@^0.26.3"
+		"@kazupon/gunshi": "jsr:@kazupon/gunshi@^0.26.3",
+		"@std/datetime": "jsr:@std/datetime@^0.225.5",
+		"@std/fs": "jsr:@std/fs@^1.0.18",
+		"@std/path": "jsr:@std/path@^1.1.0"
 	}
 }

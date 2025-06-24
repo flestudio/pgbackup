@@ -7,8 +7,10 @@
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@kazupon/gunshi@~0.26.3": "0.26.3",
     "jsr:@std/bytes@^1.0.5": "1.0.6",
+    "jsr:@std/datetime@~0.225.5": "0.225.5",
     "jsr:@std/fmt@1": "1.0.8",
     "jsr:@std/fs@1": "1.0.18",
+    "jsr:@std/fs@^1.0.18": "1.0.18",
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@1": "1.1.0",
     "jsr:@std/path@^1.1.0": "1.1.0",
@@ -26,7 +28,7 @@
         "jsr:@david/path",
         "jsr:@david/which",
         "jsr:@std/fmt",
-        "jsr:@std/fs",
+        "jsr:@std/fs@1",
         "jsr:@std/io",
         "jsr:@std/path@1"
       ]
@@ -34,7 +36,7 @@
     "@david/path@0.2.0": {
       "integrity": "f2d7aa7f02ce5a55e27c09f9f1381794acb09d328f8d3c8a2e3ab3ffc294dccd",
       "dependencies": [
-        "jsr:@std/fs",
+        "jsr:@std/fs@1",
         "jsr:@std/path@1"
       ]
     },
@@ -49,6 +51,9 @@
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
+    "@std/datetime@0.225.5": {
+      "integrity": "9f650f6caec546b80172e95a4edb8478d5fe060c4c937f7ede242ffceab6efc9"
     },
     "@std/fmt@1.0.8": {
       "integrity": "71e1fc498787e4434d213647a6e43e794af4fd393ef8f52062246e06f7e372b7"
@@ -132,6 +137,9 @@
     "dependencies": [
       "jsr:@david/dax@~0.43.2",
       "jsr:@kazupon/gunshi@~0.26.3",
+      "jsr:@std/datetime@~0.225.5",
+      "jsr:@std/fs@^1.0.18",
+      "jsr:@std/path@^1.1.0",
       "npm:@biomejs/biome@^2.0.5"
     ]
   }
