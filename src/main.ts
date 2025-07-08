@@ -47,6 +47,7 @@ const main = async () => {
 
     await sendDiscordWebhook(discordWebhookUrl, {
       content: "🔥 バックアップの作成に失敗しました",
+      avatar_url: "https://github.com/flestudio.png",
       embeds: [
         {
           title: "エラー",
