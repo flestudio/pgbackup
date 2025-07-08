@@ -1,6 +1,10 @@
 {
   "deno.enable": true,
+  "deno.path": "/home/mst-mkt/.local/share/mise/installs/deno/2.3.6/bin/deno",
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "always"
+  },
 
   "[typescript]": {
     "editor.defaultFormatter": "biomejs.biome"
