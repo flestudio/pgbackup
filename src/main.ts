@@ -37,6 +37,9 @@ const main = async () => {
     // Send Discord webhook
     const payload = await generateDiscordPayload(info, path);
     await sendDiscordWebhook(discordWebhookUrl, payload);
+
+    // Remove old backups
+    await $`find ${join(CURRENT_DIRECTORY, out)} -name 'backup_*.sql.gz' -daystart -mtime +7 -delete`;
   } catch (error) {
     if (!(error instanceof Error)) return;
 
