@@ -23,10 +23,10 @@ export const uploadToS3 = async (
 
     console.log(`Backup uploaded to S3: ${fileName}`);
   } catch (error) {
-    console.error(
-      `Failed to upload file ${fileName} to S3:`,
-      error instanceof Error ? error.message : String(error),
+    throw new Error(
+      `Failed to upload file ${fileName} to S3: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
-    Deno.exit(1);
   }
 };

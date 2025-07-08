@@ -7,15 +7,14 @@ export const compress = async (fromPath: string, toPath: string) => {
     await $`zstd -8 -T0 ${fromPath} -o ${toPath}`;
     console.log(`File compressed successfully to ${toPath}`);
   } catch (error) {
-    console.error(
-      `Failed to compress file ${fromPath}:`,
-      error instanceof Error ? error.message : String(error),
-    );
-
     await Deno.remove(fromPath).catch(() => {
       console.error(`Failed to remove temporary file ${fromPath}`);
     });
 
-    Deno.exit(1);
+    throw new Error(
+      `Failed to compress file ${fromPath}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 };

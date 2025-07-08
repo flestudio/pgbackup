@@ -11,10 +11,10 @@ export const createBackup = async (databaseName: string, backupTo: string) => {
 
     return { info: backupedFileInfo, path: backupTo };
   } catch (error) {
-    console.error(
-      `Failed to create backup for database ${databaseName}:`,
-      error instanceof Error ? error.message : String(error),
+    throw new Error(
+      `Failed to create backup for database ${databaseName}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
-    Deno.exit(1);
   }
 };

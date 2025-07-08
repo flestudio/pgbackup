@@ -18,24 +18,42 @@ const main = async () => {
     Deno.env.toObject(),
   );
 
-  // pg_dump
-  const { info, path } = await createBackup(database, COMPRESSED_FILEPATH);
+  try {
+    // pg_dump
+    const { info, path } = await createBackup(database, COMPRESSED_FILEPATH);
 
-  // zstd
-  const backupFilePath = join(CURRENT_DIRECTORY, out, COMPRESSED_FILENAME);
-  await compress(COMPRESSED_FILEPATH, backupFilePath);
+    // zstd
+    const backupFilePath = join(CURRENT_DIRECTORY, out, COMPRESSED_FILENAME);
+    await compress(COMPRESSED_FILEPATH, backupFilePath);
 
-  // rm
-  await $`rm ${COMPRESSED_FILEPATH}`;
-  console.log(`Temporary file ${COMPRESSED_FILEPATH} removed`);
+    // rm
+    await $`rm ${COMPRESSED_FILEPATH}`;
+    console.log(`Temporary file ${COMPRESSED_FILEPATH} removed`);
 
-  // Upload to S3
-  const fileName = join("backups", COMPRESSED_FILENAME);
-  await uploadToS3(backupFilePath, fileName, s3Options);
+    // Upload to S3
+    const fileName = join("backups", COMPRESSED_FILENAME);
+    await uploadToS3(backupFilePath, fileName, s3Options);
 
-  // Send Discord webhook
-  const payload = await generateDiscordPayload(info, path);
-  await sendDiscordWebhook(discordWebhookUrl, payload);
+    // Send Discord webhook
+    const payload = await generateDiscordPayload(info, path);
+    await sendDiscordWebhook(discordWebhookUrl, payload);
+  } catch (error) {
+    if (!(error instanceof Error)) return;
+
+    console.error(error.message);
+
+    await sendDiscordWebhook(discordWebhookUrl, {
+      content: "🔥 バックアップの作成に失敗しました",
+      embeds: [
+        {
+          title: "エラー",
+          description: error.message,
+        },
+      ],
+    });
+
+    Deno.exit(1);
+  }
 };
 
 main();
