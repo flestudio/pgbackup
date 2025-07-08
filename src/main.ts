@@ -39,7 +39,7 @@ const main = async () => {
     await sendDiscordWebhook(discordWebhookUrl, payload);
 
     // Remove old backups
-    await $`find ${join(CURRENT_DIRECTORY, out)} -name 'backup_*.sql.gz' -daystart -mtime +7 -delete`;
+    await $`find ${join(CURRENT_DIRECTORY, out)} -name 'backup_*.sql.zst' -daystart -mtime +7 -delete`;
   } catch (error) {
     if (!(error instanceof Error)) return;
 
