@@ -9,7 +9,7 @@ export const createBackup = async (databaseName: string, backupTo: string) => {
 
     const backupedFileInfo = await Deno.stat(backupTo);
 
-    return { info: backupedFileInfo, path: backupTo };
+    return { info: backupedFileInfo };
   } catch (error) {
     throw new Error(
       `Failed to create backup for database ${databaseName}: ${
