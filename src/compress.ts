@@ -6,6 +6,9 @@ export const compress = async (fromPath: string, toPath: string) => {
   try {
     await $`zstd -8 -T0 ${fromPath} -o ${toPath}`;
     console.log(`File compressed successfully to ${toPath}`);
+
+    const stats = await Deno.stat(toPath);
+    return { info: stats, path: toPath };
   } catch (error) {
     await Deno.remove(fromPath).catch(() => {
       console.error(`Failed to remove temporary file ${fromPath}`);

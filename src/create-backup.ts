@@ -6,10 +6,6 @@ export const createBackup = async (databaseName: string, backupTo: string) => {
   try {
     await $`pg_dump -U postgres -d ${databaseName} -f ${backupTo}`;
     console.log(`Backup created at ${backupTo}`);
-
-    const backupedFileInfo = await Deno.stat(backupTo);
-
-    return { info: backupedFileInfo };
   } catch (error) {
     throw new Error(
       `Failed to create backup for database ${databaseName}: ${

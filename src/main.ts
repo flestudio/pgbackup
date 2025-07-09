@@ -20,11 +20,11 @@ const main = async () => {
 
   try {
     // pg_dump
-    const { info } = await createBackup(database, COMPRESSED_FILEPATH);
+    await createBackup(database, COMPRESSED_FILEPATH);
 
     // zstd
     const backupFilePath = join(CURRENT_DIRECTORY, out, COMPRESSED_FILENAME);
-    await compress(COMPRESSED_FILEPATH, backupFilePath);
+    const { info, path } = await compress(COMPRESSED_FILEPATH, backupFilePath);
 
     // rm
     await $`rm ${COMPRESSED_FILEPATH}`;
@@ -35,7 +35,7 @@ const main = async () => {
     await uploadToS3(backupFilePath, fileName, s3Options);
 
     // Send Discord webhook
-    const payload = await generateDiscordPayload(info, backupFilePath);
+    const payload = await generateDiscordPayload(info, path);
     await sendDiscordWebhook(discordWebhookUrl, payload);
 
     // Remove old backups
