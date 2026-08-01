@@ -41,6 +41,8 @@ For the database password, set `PGPASSWORD` or use `.pgpass`.
 | `--s3-endpoint`         | `S3_ENDPOINT`         | _(required)_     | S3 endpoint URL.                                           |
 | `--s3-prefix`           | `S3_PREFIX`           | `backups`        | Key prefix for uploaded objects.                           |
 | `--discord-webhook-url` | `DISCORD_WEBHOOK_URL` | _(none)_         | Discord webhook for notifications (optional).              |
+| `--log-level`           | `LOG_LEVEL`           | `info`           | Log level (`debug`, `info`, `warn`, `error`).              |
+| `--log-format`          | `LOG_FORMAT`          | `text`           | Log format (`text`, `json`).                               |
 | `--retention-days`      | `RETENTION_DAYS`      | `7`              | Delete local backups older than this (0 disables pruning). |
 | `--compression-level`   | `COMPRESSION_LEVEL`   | `8`              | zstd compression level (1-22).                             |
 | `--pg-host`             | `PGHOST`              | _(local socket)_ | PostgreSQL host.                                           |
