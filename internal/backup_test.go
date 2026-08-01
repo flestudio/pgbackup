@@ -44,16 +44,16 @@ func (s *fakeStore) Key(name string) string {
 	return s.prefix + "/" + name
 }
 
-func (s *fakeStore) Upload(_ context.Context, path, key, contentType string) error {
+func (s *fakeStore) Upload(_ context.Context, path, key, contentType string) (string, error) {
 	if s.uploadErr != nil {
-		return s.uploadErr
+		return "", s.uploadErr
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 	s.uploads = append(s.uploads, uploadRecord{key: key, data: data, contentType: contentType})
-	return nil
+	return "fake-etag", nil
 }
 
 type fakeNotifier struct {

@@ -33,9 +33,10 @@ func NewStore(cfg S3Config) (*Store, error) {
 		return nil, fmt.Errorf("endpoint must be a URL like https://<account>.r2.cloudflarestorage.com, got %q", cfg.Endpoint)
 	}
 	client, err := minio.New(u.Host, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
-		Secure: u.Scheme != "http",
-		Region: cfg.Region,
+		Creds:      credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
+		Secure:     u.Scheme != "http",
+		Region:     cfg.Region,
+		MaxRetries: 30,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create s3 client: %w", err)
@@ -50,12 +51,13 @@ func (s *Store) Key(name string) string {
 	return s.prefix + "/" + name
 }
 
-func (s *Store) Upload(ctx context.Context, path, key, contentType string) error {
-	_, err := s.client.FPutObject(ctx, s.bucket, key, path, minio.PutObjectOptions{
-		ContentType: contentType,
+func (s *Store) Upload(ctx context.Context, path, key, contentType string) (string, error) {
+	info, err := s.client.FPutObject(ctx, s.bucket, key, path, minio.PutObjectOptions{
+		ContentType:    contentType,
+		SendContentMd5: true,
 	})
 	if err != nil {
-		return fmt.Errorf("upload %q: %w", key, err)
+		return "", fmt.Errorf("upload %q: %w", key, err)
 	}
-	return nil
+	return info.ETag, nil
 }

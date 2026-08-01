@@ -22,7 +22,7 @@ const (
 
 type Storage interface {
 	Key(name string) string
-	Upload(ctx context.Context, path, key, contentType string) error
+	Upload(ctx context.Context, path, key, contentType string) (etag string, err error)
 }
 
 type Notifier interface {
@@ -126,10 +126,11 @@ func (a *App) writeDump(ctx context.Context, path string) (int64, error) {
 func (a *App) upload(ctx context.Context, file backupFile) error {
 	key := a.store.Key(file.name)
 	a.log.Info("uploading backup", "key", key)
-	if err := a.store.Upload(ctx, file.path, key, contentType); err != nil {
+	etag, err := a.store.Upload(ctx, file.path, key, contentType)
+	if err != nil {
 		return err
 	}
-	a.log.Info("backup uploaded", "key", key)
+	a.log.Info("backup uploaded", "key", key, "etag", etag)
 	return nil
 }
 

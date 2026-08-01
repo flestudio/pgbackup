@@ -67,6 +67,7 @@ func (f *fakeS3) handler() http.Handler {
 		f.mu.Lock()
 		f.objects[parts[len(parts)-1]] = body
 		f.mu.Unlock()
+		w.Header().Set("ETag", `"fake-etag"`)
 		w.WriteHeader(http.StatusOK)
 	})
 }
@@ -115,8 +116,12 @@ func TestStore_Upload(t *testing.T) {
 		t.Fatalf("NewStore() error = %v", err)
 	}
 	key := store.Key("backup.sql.zst")
-	if err := store.Upload(t.Context(), tmp, key, "application/zstd"); err != nil {
+	etag, err := store.Upload(t.Context(), tmp, key, "application/zstd")
+	if err != nil {
 		t.Fatalf("Upload() error = %v", err)
+	}
+	if etag != "fake-etag" {
+		t.Errorf("Upload() etag = %q, want %q", etag, "fake-etag")
 	}
 
 	fake.mu.Lock()

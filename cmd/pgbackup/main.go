@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/joho/godotenv"
@@ -57,6 +58,9 @@ func run() error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	ctx, cancel := context.WithTimeout(ctx, 6*time.Hour)
+	defer cancel()
 
 	return app.Run(ctx)
 }
