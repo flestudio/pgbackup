@@ -49,8 +49,14 @@ func run() error {
 		return err
 	}
 
+	app, err := pgbackup.New(c.Config, log)
+	if err != nil {
+		log.Error("initialize app", "error", err)
+		return err
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	return pgbackup.New(c.Config, log).Run(ctx)
+	return app.Run(ctx)
 }

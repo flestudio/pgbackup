@@ -1,12 +1,12 @@
 package pgbackup
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"os"
-	"time"
+	"net/url"
 
-	"github.com/rhnvrm/simples3"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type S3Config struct {
@@ -19,16 +19,28 @@ type S3Config struct {
 }
 
 type Store struct {
-	s3     *simples3.S3
+	client *minio.Client
 	bucket string
 	prefix string
 }
 
-func NewStore(cfg S3Config) *Store {
-	s3 := simples3.New(cfg.Region, cfg.AccessKey, cfg.SecretKey)
-	s3.SetEndpoint(cfg.Endpoint)
-	s3.SetClient(&http.Client{Timeout: 5 * time.Minute})
-	return &Store{s3: s3, bucket: cfg.Bucket, prefix: cfg.Prefix}
+func NewStore(cfg S3Config) (*Store, error) {
+	u, err := url.Parse(cfg.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("parse endpoint %q: %w", cfg.Endpoint, err)
+	}
+	if u.Host == "" {
+		return nil, fmt.Errorf("endpoint must be a URL like https://<account>.r2.cloudflarestorage.com, got %q", cfg.Endpoint)
+	}
+	client, err := minio.New(u.Host, &minio.Options{
+		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
+		Secure: u.Scheme != "http",
+		Region: cfg.Region,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create s3 client: %w", err)
+	}
+	return &Store{client: client, bucket: cfg.Bucket, prefix: cfg.Prefix}, nil
 }
 
 func (s *Store) Key(name string) string {
@@ -38,18 +50,9 @@ func (s *Store) Key(name string) string {
 	return s.prefix + "/" + name
 }
 
-func (s *Store) Upload(path, key, contentType string) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("open %q: %w", path, err)
-	}
-	defer func() { _ = f.Close() }()
-
-	_, err = s.s3.FilePut(simples3.UploadInput{
-		Bucket:      s.bucket,
-		ObjectKey:   key,
+func (s *Store) Upload(ctx context.Context, path, key, contentType string) error {
+	_, err := s.client.FPutObject(ctx, s.bucket, key, path, minio.PutObjectOptions{
 		ContentType: contentType,
-		Body:        f,
 	})
 	if err != nil {
 		return fmt.Errorf("upload %q: %w", key, err)

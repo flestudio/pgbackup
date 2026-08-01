@@ -22,7 +22,7 @@ const (
 
 type Storage interface {
 	Key(name string) string
-	Upload(path, key, contentType string) error
+	Upload(ctx context.Context, path, key, contentType string) error
 }
 
 type Notifier interface {
@@ -40,11 +40,15 @@ type App struct {
 	diskUsage func(path string) (Usage, error)
 }
 
-func New(cfg Config, log *slog.Logger) *App {
+func New(cfg Config, log *slog.Logger) (*App, error) {
+	store, err := NewStore(cfg.StorageConfig())
+	if err != nil {
+		return nil, err
+	}
 	a := &App{
 		cfg:       cfg,
 		dumper:    NewPgDumper(cfg.DumpOptions()),
-		store:     NewStore(cfg.StorageConfig()),
+		store:     store,
 		log:       log,
 		now:       time.Now,
 		diskUsage: getDiskUsage,
@@ -52,7 +56,7 @@ func New(cfg Config, log *slog.Logger) *App {
 	if cfg.NotifyEnabled() {
 		a.notifier = NewDiscordClient(cfg.DiscordWebhookURL, nil)
 	}
-	return a
+	return a, nil
 }
 
 type backupFile struct {
@@ -71,7 +75,7 @@ func (a *App) Run(ctx context.Context) error {
 	}
 	a.log.Info("backup created", "path", file.path, "size", file.size)
 
-	if err := a.upload(file); err != nil {
+	if err := a.upload(ctx, file); err != nil {
 		a.log.Error("upload backup", "error", err)
 		a.notify(FailurePayload(err.Error()))
 		return err
@@ -119,10 +123,10 @@ func (a *App) writeDump(ctx context.Context, path string) (int64, error) {
 	return fi.Size(), nil
 }
 
-func (a *App) upload(file backupFile) error {
+func (a *App) upload(ctx context.Context, file backupFile) error {
 	key := a.store.Key(file.name)
 	a.log.Info("uploading backup", "key", key)
-	if err := a.store.Upload(file.path, key, contentType); err != nil {
+	if err := a.store.Upload(ctx, file.path, key, contentType); err != nil {
 		return err
 	}
 	a.log.Info("backup uploaded", "key", key)

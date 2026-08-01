@@ -44,7 +44,7 @@ func (s *fakeStore) Key(name string) string {
 	return s.prefix + "/" + name
 }
 
-func (s *fakeStore) Upload(path, key, contentType string) error {
+func (s *fakeStore) Upload(_ context.Context, path, key, contentType string) error {
 	if s.uploadErr != nil {
 		return s.uploadErr
 	}

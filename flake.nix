@@ -22,7 +22,7 @@ rec {
           pname = "pgbackup";
           inherit version;
           src = ./.;
-          vendorHash = "sha256-0x8XAOrNSZhhJvZrwMVQhS6c7fqQlocTEbTCrLAf5cM=";
+          vendorHash = "sha256-hQT9akOg1sJbwCkfkXzsNuvqnJugnGZgcHnU2vA87hM=";
           subPackages = [ "cmd/pgbackup" ];
           ldflags = [
             "-s"
