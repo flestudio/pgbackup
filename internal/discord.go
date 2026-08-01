@@ -114,19 +114,3 @@ func (c *DiscordClient) Send(ctx context.Context, payload Payload) error {
 	}
 	return nil
 }
-
-var byteUnits = [...]string{"Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"}
-
-func humanizeBytes(b uint64) string {
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d Bytes", b)
-	}
-	value := float64(b)
-	i := 0
-	for value >= unit && i < len(byteUnits)-1 {
-		value /= unit
-		i++
-	}
-	return fmt.Sprintf("%.2f %s", value, byteUnits[i])
-}

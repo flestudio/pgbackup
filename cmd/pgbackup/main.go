@@ -45,6 +45,8 @@ func run() error {
 		kong.UsageOnError(),
 	)
 
+	log = c.Logger(os.Stderr)
+
 	if err := c.Validate(); err != nil {
 		log.Error("invalid configuration", "error", err)
 		return err

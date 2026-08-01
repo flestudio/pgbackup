@@ -3,6 +3,7 @@ package pgbackup
 import (
 	"bufio"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -34,7 +35,7 @@ func TestNewStore_InvalidEndpoint(t *testing.T) {
 	t.Parallel()
 
 	for _, endpoint := range []string{"", "example.com", "://bad"} {
-		if _, err := NewStore(S3Config{Bucket: "b", Endpoint: endpoint}); err == nil {
+		if _, err := NewStore(S3Config{Bucket: "b", Endpoint: endpoint}, slog.New(slog.DiscardHandler)); err == nil {
 			t.Errorf("NewStore(endpoint=%q) error = nil, want error", endpoint)
 		}
 	}
@@ -111,7 +112,7 @@ func TestStore_Upload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	store, err := NewStore(S3Config{Bucket: "bucket", Region: "auto", AccessKey: "k", SecretKey: "s", Endpoint: srv.URL, Prefix: "backups"})
+	store, err := NewStore(S3Config{Bucket: "bucket", Region: "auto", AccessKey: "k", SecretKey: "s", Endpoint: srv.URL, Prefix: "backups"}, slog.New(slog.DiscardHandler))
 	if err != nil {
 		t.Fatalf("NewStore() error = %v", err)
 	}

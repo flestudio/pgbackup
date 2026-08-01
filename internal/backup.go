@@ -41,7 +41,7 @@ type App struct {
 }
 
 func New(cfg Config, log *slog.Logger) (*App, error) {
-	store, err := NewStore(cfg.StorageConfig())
+	store, err := NewStore(cfg.StorageConfig(), log)
 	if err != nil {
 		return nil, err
 	}
@@ -67,22 +67,53 @@ type backupFile struct {
 }
 
 func (a *App) Run(ctx context.Context) error {
+	start := time.Now()
+	a.log.Info("starting backup",
+		"database", a.cfg.Database,
+		"output_dir", a.cfg.OutputDir,
+		"bucket", a.cfg.S3Bucket,
+		"prefix", a.cfg.S3Prefix,
+		"retention_days", a.cfg.RetentionDays,
+	)
+
 	file, err := a.create(ctx)
 	if err != nil {
 		a.log.Error("create backup", "error", err)
 		a.notify(FailurePayload(err.Error()))
 		return err
 	}
-	a.log.Info("backup created", "path", file.path, "size", file.size)
+	dumpDuration := time.Since(start)
+	a.log.Info("backup created",
+		"path", file.path,
+		"bytes", file.size,
+		"size", humanizeBytes(uint64(file.size)),
+		"duration", dumpDuration.Round(time.Second),
+	)
 
-	if err := a.upload(ctx, file); err != nil {
+	key := a.store.Key(file.name)
+	a.log.Info("uploading backup", "key", key, "size", humanizeBytes(uint64(file.size)))
+	uploadStart := time.Now()
+	etag, err := a.store.Upload(ctx, file.path, key, contentType)
+	if err != nil {
 		a.log.Error("upload backup", "error", err)
 		a.notify(FailurePayload(err.Error()))
 		return err
 	}
+	uploadDuration := time.Since(uploadStart)
+	a.log.Info("backup uploaded",
+		"key", key,
+		"etag", etag,
+		"duration", uploadDuration.Round(time.Second),
+		"avg_speed", transferSpeed(file.size, uploadDuration),
+	)
 
 	a.notify(a.successPayload(file))
 	a.prune()
+	a.log.Info("backup finished",
+		"dump", dumpDuration.Round(time.Second),
+		"upload", uploadDuration.Round(time.Second),
+		"total", time.Since(start).Round(time.Second),
+	)
 	return nil
 }
 
@@ -109,6 +140,8 @@ func (a *App) writeDump(ctx context.Context, path string) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("create backup file: %w", err)
 	}
+	stop := a.logDumpProgress(f)
+	defer stop()
 	if err := a.dumper.Dump(ctx, f); err != nil {
 		_ = f.Close()
 		return 0, err
@@ -123,15 +156,32 @@ func (a *App) writeDump(ctx context.Context, path string) (int64, error) {
 	return fi.Size(), nil
 }
 
-func (a *App) upload(ctx context.Context, file backupFile) error {
-	key := a.store.Key(file.name)
-	a.log.Info("uploading backup", "key", key)
-	etag, err := a.store.Upload(ctx, file.path, key, contentType)
-	if err != nil {
-		return err
-	}
-	a.log.Info("backup uploaded", "key", key, "etag", etag)
-	return nil
+func (a *App) logDumpProgress(f *os.File) func() {
+	start := time.Now()
+	ticker := time.NewTicker(progressInterval)
+	done := make(chan struct{})
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				fi, err := f.Stat()
+				if err != nil {
+					continue
+				}
+				elapsed := time.Since(start)
+				a.log.Info("dumping database",
+					"bytes", fi.Size(),
+					"size", humanizeBytes(uint64(fi.Size())),
+					"speed", transferSpeed(fi.Size(), elapsed),
+					"elapsed", elapsed.Round(time.Second),
+				)
+			}
+		}
+	}()
+	return func() { close(done) }
 }
 
 func (a *App) prune() {
@@ -143,6 +193,9 @@ func (a *App) prune() {
 	case err != nil:
 		a.log.Warn("prune backups", "error", err)
 	case len(deleted) > 0:
+		for _, path := range deleted {
+			a.log.Debug("pruned backup", "path", path)
+		}
 		a.log.Info("pruned backups", "count", len(deleted))
 	}
 }
@@ -169,7 +222,9 @@ func (a *App) notify(p Payload) {
 	defer cancel()
 	if err := a.notifier.Send(ctx, p); err != nil {
 		a.log.Warn("send notification", "error", err)
+		return
 	}
+	a.log.Debug("notification sent")
 }
 
 func pruneLocal(dir string, cutoff time.Time) ([]string, error) {

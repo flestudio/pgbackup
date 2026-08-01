@@ -84,7 +84,7 @@ func newTestApp(t *testing.T, dumper *fakeDumper, store *fakeStore, notifier Not
 		dumper:    dumper,
 		store:     store,
 		notifier:  notifier,
-		log:       slog.New(slog.NewTextHandler(io.Discard, nil)),
+		log:       slog.New(slog.DiscardHandler),
 		now:       func() time.Time { return now },
 		diskUsage: func(string) (Usage, error) { return Usage{Total: 100, Used: 50, Available: 50}, nil },
 	}

@@ -19,6 +19,9 @@ type Config struct {
 
 	DiscordWebhookURL string `help:"Discord webhook URL for notifications (optional)." env:"DISCORD_WEBHOOK_URL"`
 
+	LogLevel  string `help:"Log level (${enum})." env:"LOG_LEVEL" default:"info" enum:"debug,info,warn,error"`
+	LogFormat string `help:"Log format (${enum})." env:"LOG_FORMAT" default:"text" enum:"text,json"`
+
 	RetentionDays    int `help:"Delete local backups older than this many days (0 disables pruning)." env:"RETENTION_DAYS" default:"7"`
 	CompressionLevel int `help:"zstd compression level (1-22)." env:"COMPRESSION_LEVEL" default:"8"`
 
